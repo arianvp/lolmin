@@ -9,3 +9,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v9
       - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
+      - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
+      - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
