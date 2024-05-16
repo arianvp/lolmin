@@ -1,0 +1,11 @@
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache

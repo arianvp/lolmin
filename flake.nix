@@ -6,10 +6,8 @@
   };
 
   outputs = { self, nixpkgs }: {
-    nixosModules.x86_64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.x86_64-linux; };
-    nixosConfigsCross.x86_64-linux.foo = nixpkgs.lib.nixos.evalModules {
-      modules = [
-        self.nixosModules.x86_64-linux
+    nixosModules.minimal = {
+      imports = [
         ({ lib, ... }: {
           options.boot.loader.grub.enable = lib.mkEnableOption "no";
         })
@@ -91,7 +89,15 @@
 
         (nixpkgs + "/nixos/modules/services/hardware/udev.nix")
         (nixpkgs + "/nixos/modules/hardware/device-tree.nix")
+      ];
+    };
+    nixosModules.x86_64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.x86_64-linux; };
+    nixosConfigurations.foo = nixpkgs.lib.nixos.evalModules {
+      modules = [
+        self.nixosModules.x86_64-linux
+        self.nixosModules.minimal
         {
+          networking.hostName = "foo";
           fileSystems."/".device = "/dev/disk/by-label/nixos3";
           boot.loader.systemd-boot.enable = true;
           boot.initrd.systemd.enable = true;
@@ -99,6 +105,18 @@
         }
       ];
     };
-    nixosConfigurations.foo = self.nixosConfigsCross.x86_64-linux.foo;
+    nixosConfigurations.bar = nixpkgs.lib.nixos.evalModules {
+      modules = [
+        self.nixosModules.x86_64-linux
+        self.nixosModules.minimal
+        {
+          networking.hostName = "foo";
+          fileSystems."/".device = "/dev/disk/by-label/nixos3";
+          boot.loader.systemd-boot.enable = true;
+          boot.initrd.systemd.enable = true;
+          system.stateVersion = "24.05";
+        }
+      ];
+    };
   };
 }
