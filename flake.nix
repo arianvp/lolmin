@@ -2,7 +2,7 @@
   description = "A very basic flake";
 
   inputs = {
-    nixpkgs.url = "path:/Users/arian/Projects/nixpkgs";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixpkgs-unstable";
   };
 
   outputs = { self, nixpkgs }: {
@@ -69,7 +69,7 @@
         (nixpkgs + "/nixos/modules/services/system/dbus.nix")
         (nixpkgs + "/nixos/modules/services/system/nscd.nix")
         (nixpkgs + "/nixos/modules/system/boot/modprobe.nix")
-        (nixpkgs + "/nixos/modules/system/boot/systemd/initrd.nix")
+        ./systemd-initrd.nix
         (nixpkgs + "/nixos/modules/system/boot/systemd/sysusers.nix")
         (nixpkgs + "/nixos/modules/system/boot/systemd/oomd.nix")
         ./systemd-user.nix
