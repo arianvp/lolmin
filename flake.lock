@@ -1,0 +1,23 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1715893836,
+        "narHash": "sha256-9HlIXRx6Rg0fGj/QfE9WTw3OpxAZhfJDrMn2iuzLUZU=",
+        "path": "/Users/arian/Projects/nixpkgs",
+        "type": "path"
+      },
+      "original": {
+        "path": "/Users/arian/Projects/nixpkgs",
+        "type": "path"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
