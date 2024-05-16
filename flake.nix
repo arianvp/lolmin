@@ -32,6 +32,7 @@
             # euhm
             type = lib.types.str;
             default = "";
+
             description = ''
               The content of /etc/mdadm.conf
             '';
@@ -91,11 +92,10 @@
         (nixpkgs + "/nixos/modules/services/hardware/udev.nix")
         (nixpkgs + "/nixos/modules/hardware/device-tree.nix")
         {
-          fileSystems."/".device = "/dev/disk/byl-abel/nixos";
+          fileSystems."/".device = "/dev/disk/by-label/nixos3";
           boot.loader.systemd-boot.enable = true;
           boot.initrd.systemd.enable = true;
           system.stateVersion = "24.05";
-
         }
       ];
     };
