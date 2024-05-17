@@ -4,6 +4,9 @@ on:
     branches: [main]
 jobs:
   eval:
+    strategy:
+      matrix:
+        names: [aarch64-linux, aarch64-linux-minimal]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -11,8 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v9
-      - uses: DeterminateSystems/magic-nix-cache-action@v6
-      - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
-      - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
-      - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
-      - run: time nix build .#nixosConfigurations.foo.config.system.build.toplevel
+      - name: Do a first pass do download deps
+        run: nix path-info --derivation .#nixosConfigurations.${{ matrix.names }}.foo.config.system.build.toplevel  --no-eval-cache
+      - name: Benchmark eval time
+        run: perf -r10 stat nix path-info --derivation .#nixosConfigurations.${{ matrix.names }}.foo.config.system.build.toplevel  --no-eval-cache
+      - name: Build
+        run: nix build .#nixosConfigurations.${{ matrix.names }}.foo.config.system.build.toplevel

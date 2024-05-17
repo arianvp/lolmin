@@ -91,33 +91,24 @@
         (nixpkgs + "/nixos/modules/hardware/device-tree.nix")
       ];
     };
+
     nixosModules.x86_64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.x86_64-linux; };
     nixosModules.aarch64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.aarch64-linux; };
-    nixosConfigurations.x86_64-linux = nixpkgs.lib.nixos.evalModules {
-      modules = [
-        self.nixosModules.x86_64-linux
-        self.nixosModules.minimal
-        {
-          networking.hostName = "foo";
-          fileSystems."/".device = "/dev/disk/by-label/nixos3";
-          boot.loader.systemd-boot.enable = true;
-          boot.initrd.systemd.enable = true;
-          system.stateVersion = "24.05";
-        }
-      ];
+
+    nixosModules.config = {
+      networking.hostName = "foo";
+      fileSystems."/".device = "/dev/disk/by-label/nixos";
+      boot.loader.systemd-boot.enable = true;
+      boot.initrd.systemd.enable = true;
+      system.stateVersion = "24.05";
     };
-    nixosConfigurations.aarch64-linux = nixpkgs.lib.nixos.evalModules {
-      modules = [
-        self.nixosModules.aarch64-linux
-        self.nixosModules.minimal
-        {
-          networking.hostName = "foo";
-          fileSystems."/".device = "/dev/disk/by-label/nixos3";
-          boot.loader.systemd-boot.enable = true;
-          boot.initrd.systemd.enable = true;
-          system.stateVersion = "24.05";
-        }
-      ];
+
+    nixosConfigurations.aarch64-linux = nixpkgs.lib.nixosSystem {
+      modules = with self.nixosModules; [ aarch64-linux config ];
+    };
+
+    nixosConfigurations.aarch64-linux-minimal = nixpkgs.lib.nixos.evalModules {
+      modules = with self.nixosModules; [ aarch64-linux minimal config ];
     };
   };
 }
