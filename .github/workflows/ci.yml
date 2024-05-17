@@ -5,9 +5,14 @@ on:
 jobs:
   eval:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v6
       - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
       - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
       - run: time nix path-info --derivation .#nixosConfigurations.foo.config.system.build.toplevel  --no-eval-cache
+      - run: time nix build .#nixosConfigurations.foo.config.system.build.toplevel
