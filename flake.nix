@@ -92,7 +92,8 @@
       ];
     };
     nixosModules.x86_64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.x86_64-linux; };
-    nixosConfigurations.foo = nixpkgs.lib.nixos.evalModules {
+    nixosModules.aarch64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.aarch64-linux; };
+    nixosConfigurations.x86_64-linux = nixpkgs.lib.nixos.evalModules {
       modules = [
         self.nixosModules.x86_64-linux
         self.nixosModules.minimal
@@ -105,9 +106,9 @@
         }
       ];
     };
-    nixosConfigurations.bar = nixpkgs.lib.nixos.evalModules {
+    nixosConfigurations.aarch64-linux = nixpkgs.lib.nixos.evalModules {
       modules = [
-        self.nixosModules.x86_64-linux
+        self.nixosModules.aarch64-linux
         self.nixosModules.minimal
         {
           networking.hostName = "foo";
