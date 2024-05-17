@@ -17,4 +17,4 @@ jobs:
       - name: Benchmark eval time
         run: nix run nixpkgs#hyperfine -- 'nix path-info --derivation .#nixosConfigurations.${{ matrix.nixosConfigurations }}.config.system.build.toplevel --no-eval-cache'
       - name: Build
-        run: nix build .#nixosConfigurations.${{ matrix.nixosConfigurations }}.foo.config.system.build.toplevel
+        run: nix build .#nixosConfigurations.${{ matrix.nixosConfigurations }}.config.system.build.toplevel
