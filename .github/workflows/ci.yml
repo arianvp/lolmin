@@ -16,5 +16,3 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v9
       - name: Benchmark eval time
         run: nix run nixpkgs#hyperfine -- --warmup 1 'nix path-info --derivation .#nixosConfigurations.${{ matrix.nixosConfigurations }}.config.system.build.toplevel --no-eval-cache'
-      - name: Build
-        run: nix build .#nixosConfigurations.${{ matrix.nixosConfigurations }}.config.system.build.toplevel
