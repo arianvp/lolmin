@@ -97,9 +97,6 @@ let
   pamOpts = { config, name, ... }:
     let cfg = config; in let config = parentConfig; in {
 
-      imports = [
-        (lib.mkRenamedOptionModule [ "enableKwallet" ] [ "kwallet" "enable" ])
-      ];
 
       options = {
 
@@ -300,16 +297,6 @@ let
           description = "Whether to show the message of the day.";
         };
 
-        makeHomeDir = mkOption {
-          default = false;
-          type = types.bool;
-          description = ''
-            Whether to try to create home directories for users
-            with `$HOME`s pointing to nonexistent
-            locations on session login.
-          '';
-        };
-
         updateWtmp = mkOption {
           default = false;
           type = types.bool;
@@ -320,50 +307,6 @@ let
           default = false;
           type = types.bool;
           description = "Whether to log authentication failures in {file}`/var/log/faillog`.";
-        };
-
-        enableAppArmor = mkOption {
-          default = false;
-          type = types.bool;
-          description = ''
-            Enable support for attaching AppArmor profiles at the
-            user/group level, e.g., as part of a role based access
-            control scheme.
-          '';
-        };
-
-        kwallet = {
-          enable = mkOption {
-            default = false;
-            type = types.bool;
-            description = ''
-              If enabled, pam_wallet will attempt to automatically unlock the
-              user's default KDE wallet upon login. If the user has no wallet named
-              "kdewallet", or the login password does not match their wallet
-              password, KDE will prompt separately after login.
-            '';
-          };
-
-          package = mkPackageOption pkgs.plasma5Packages "kwallet-pam" {
-            pkgsText = "pkgs.plasma5Packages";
-          };
-        };
-
-        sssdStrictAccess = mkOption {
-          default = false;
-          type = types.bool;
-          description = "enforce sssd access control";
-        };
-
-        enableGnomeKeyring = mkOption {
-          default = false;
-          type = types.bool;
-          description = ''
-            If enabled, pam_gnome_keyring will attempt to automatically unlock the
-            user's default Gnome keyring upon login. If the user login password does
-            not match their keyring password, Gnome Keyring will prompt separately
-            after login.
-          '';
         };
 
         failDelay = {
@@ -382,51 +325,6 @@ let
             example = 1000000;
             description = "The delay time (in microseconds) on failure.";
           };
-        };
-
-        gnupg = {
-          enable = mkOption {
-            type = types.bool;
-            default = false;
-            description = ''
-              If enabled, pam_gnupg will attempt to automatically unlock the
-              user's GPG keys with the login password via
-              {command}`gpg-agent`. The keygrips of all keys to be
-              unlocked should be written to {file}`~/.pam-gnupg`,
-              and can be queried with {command}`gpg -K --with-keygrip`.
-              Presetting passphrases must be enabled by adding
-              `allow-preset-passphrase` in
-              {file}`~/.gnupg/gpg-agent.conf`.
-            '';
-          };
-
-          noAutostart = mkOption {
-            type = types.bool;
-            default = false;
-            description = ''
-              Don't start {command}`gpg-agent` if it is not running.
-              Useful in conjunction with starting {command}`gpg-agent` as
-              a systemd user service.
-            '';
-          };
-
-          storeOnly = mkOption {
-            type = types.bool;
-            default = false;
-            description = ''
-              Don't send the password immediately after login, but store for PAM
-              `session`.
-            '';
-          };
-        };
-
-        zfs = mkOption {
-          default = config.security.pam.zfs.enable;
-          defaultText = literalExpression "config.security.pam.zfs.enable";
-          type = types.bool;
-          description = ''
-            Enable unlocking and mounting of encrypted ZFS home dataset at login.
-          '';
         };
 
         text = mkOption {
@@ -497,30 +395,7 @@ let
           in
           {
             account = autoOrderRules [
-              #{ name = "ldap"; enable = use_ldap; control = "sufficient"; modulePath = "${pam_ldap}/lib/security/pam_ldap.so"; }
-              /*{
-                name = "mysql";
-                enable = cfg.mysqlAuth;
-                control = "sufficient";
-                modulePath = "${pkgs.pam_mysql}/lib/security/pam_mysql.so";
-                settings = {
-                  config_file = "/etc/security/pam_mysql.conf";
-                };
-              }*/
-              /*{
-                name = "kanidm";
-                enable = config.services.kanidm.enablePam;
-                control = "sufficient";
-                modulePath = "${pkgs.kanidm}/lib/pam_kanidm.so";
-                settings = {
-                  ignore_unknown_user = true;
-                };
-              }*/
-              #{ name = "sss"; enable = config.services.sssd.enable; control = if cfg.sssdStrictAccess then "[default=bad success=ok user_unknown=ignore]" else "sufficient"; modulePath = "${pkgs.sssd}/lib/security/pam_sss.so"; }
-              #{ name = "krb5"; enable = config.security.pam.krb5.enable; control = "sufficient"; modulePath = "${pam_krb5}/lib/security/pam_krb5.so"; }
-              #{ name = "oslogin_login"; enable = cfg.googleOsLoginAccountVerification; control = "[success=ok ignore=ignore default=die]"; modulePath = "${pkgs.google-guest-oslogin}/lib/security/pam_oslogin_login.so"; }
-              #{ name = "oslogin_admin"; enable = cfg.googleOsLoginAccountVerification; control = "[success=ok default=ignore]"; modulePath = "${pkgs.google-guest-oslogin}/lib/security/pam_oslogin_admin.so"; }
-              #{ name = "systemd_home"; enable = config.services.homed.enable; control = "sufficient"; modulePath = "${config.systemd.package}/lib/security/pam_systemd_home.so"; }
+              { name = "systemd_home"; enable = config.services.homed.enable; control = "sufficient"; modulePath = "${config.systemd.package}/lib/security/pam_systemd_home.so"; }
               # The required pam_unix.so module has to come after all the sufficient modules
               # because otherwise, the account lookup will fail if the user does not exist
               # locally, for example with MySQL- or LDAP-auth.
@@ -528,7 +403,6 @@ let
             ];
 
             auth = autoOrderRules ([
-              { name = "rootok"; enable = cfg.rootOK; control = "sufficient"; modulePath = "pam_rootok.so"; }
               {
                 name = "wheel";
                 enable = cfg.requireWheel;
@@ -615,29 +489,7 @@ let
               }
               { name = "unix"; control = "required"; modulePath = "pam_unix.so"; }
               { name = "loginuid"; enable = cfg.setLoginUid; control = if config.boot.isContainer then "optional" else "required"; modulePath = "pam_loginuid.so"; }
-              {
-                name = "tty_audit";
-                enable = cfg.ttyAudit.enable;
-                control = "required";
-                modulePath = "${pkgs.pam}/lib/security/pam_tty_audit.so";
-                settings = {
-                  open_only = cfg.ttyAudit.openOnly;
-                  enable = cfg.ttyAudit.enablePattern;
-                  disable = cfg.ttyAudit.disablePattern;
-                };
-              }
               { name = "systemd_home"; enable = config.services.homed.enable; control = "required"; modulePath = "${config.systemd.package}/lib/security/pam_systemd_home.so"; }
-              {
-                name = "mkhomedir";
-                enable = cfg.makeHomeDir;
-                control = "required";
-                modulePath = "${pkgs.pam}/lib/security/pam_mkhomedir.so";
-                settings = {
-                  silent = true;
-                  skel = config.security.pam.makeHomeDir.skelDirectory;
-                  inherit (config.security.pam.makeHomeDir) umask;
-                };
-              }
               {
                 name = "lastlog";
                 enable = cfg.updateWtmp;
@@ -649,15 +501,6 @@ let
               }
               { name = "systemd"; enable = cfg.startSession; control = "optional"; modulePath = "${config.systemd.package}/lib/security/pam_systemd.so"; }
               {
-                name = "limits";
-                enable = cfg.limits != [ ];
-                control = "required";
-                modulePath = "${pkgs.pam}/lib/security/pam_limits.so";
-                settings = {
-                  conf = "${makeLimitsConf cfg.limits}";
-                };
-              }
-              {
                 name = "motd";
                 enable = cfg.showMotd && (config.users.motd != null || config.users.motdFile != null);
                 control = "optional";
@@ -666,54 +509,12 @@ let
                   inherit motd;
                 };
               }
-              {
-                name = "apparmor";
-                enable = cfg.enableAppArmor && config.security.apparmor.enable;
-                control = "optional";
-                modulePath = "${pkgs.apparmor-pam}/lib/security/pam_apparmor.so";
-                settings = {
-                  order = "user,group,default";
-                  debug = true;
-                };
-              }
-              { name = "kwallet"; enable = cfg.kwallet.enable; control = "optional"; modulePath = "${cfg.kwallet.package}/lib/security/pam_kwallet5.so"; }
-              {
-                name = "gnome_keyring";
-                enable = cfg.enableGnomeKeyring;
-                control = "optional";
-                modulePath = "${pkgs.gnome.gnome-keyring}/lib/security/pam_gnome_keyring.so";
-                settings = {
-                  auto_start = true;
-                };
-              }
-              {
-                name = "gnupg";
-                enable = cfg.gnupg.enable;
-                control = "optional";
-                modulePath = "${pkgs.pam_gnupg}/lib/security/pam_gnupg.so";
-                settings = {
-                  no-autostart = cfg.gnupg.noAutostart;
-                };
-              }
             ];
           };
       };
 
     };
 
-
-  inherit (pkgs) pam_krb5 pam_ccreds;
-
-  use_ldap = (config.users.ldap.enable && config.users.ldap.loginPam);
-  pam_ldap = if config.users.ldap.daemon.enable then pkgs.nss_pam_ldapd else pkgs.pam_ldap;
-
-  # Create a limits.conf(5) file.
-  makeLimitsConf = limits:
-    pkgs.writeText "limits.conf"
-      (concatMapStrings
-        ({ domain, type, item, value }:
-          "${domain} ${type} ${item} ${toString value}\n")
-        limits);
 
   limitsType = with lib.types; listOf (submodule ({ ... }: {
     options = {
@@ -771,10 +572,6 @@ let
       value.source = pkgs.writeText "${name}.pam" service.text;
     };
 
-  optionalSudoConfigForSSHAgentAuth = optionalString config.security.pam.sshAgentAuth.enable ''
-    # Keep SSH_AUTH_SOCK so that pam_ssh_agent_auth.so can do its magic.
-    Defaults env_keep+=SSH_AUTH_SOCK
-  '';
 
 in
 
@@ -828,81 +625,6 @@ in
         defining the name of the service.
       '';
     };
-
-    security.pam.makeHomeDir.skelDirectory = mkOption {
-      type = types.str;
-      default = "/var/empty";
-      example = "/etc/skel";
-      description = ''
-        Path to skeleton directory whose contents are copied to home
-        directories newly created by `pam_mkhomedir`.
-      '';
-    };
-
-    security.pam.makeHomeDir.umask = mkOption {
-      type = types.str;
-      default = "0077";
-      example = "0022";
-      description = ''
-        The user file mode creation mask to use on home directories
-        newly created by `pam_mkhomedir`.
-      '';
-    };
-
-    security.pam.sshAgentAuth = {
-      enable = mkEnableOption ''
-        authenticating using a signature performed by the ssh-agent.
-        This allows using SSH keys exclusively, instead of passwords, for instance on remote machines
-      '';
-
-      authorizedKeysFiles = mkOption {
-        type = with types; listOf str;
-        description = ''
-          A list of paths to files in OpenSSH's `authorized_keys` format, containing
-          the keys that will be trusted by the `pam_ssh_agent_auth` module.
-
-          The following patterns are expanded when interpreting the path:
-          - `%f` and `%H` respectively expand to the fully-qualified and short hostname ;
-          - `%u` expands to the username ;
-          - `~` or `%h` expands to the user's home directory.
-
-          ::: {.note}
-          Specifying user-writeable files here result in an insecure configuration:  a malicious process
-          can then edit such an authorized_keys file and bypass the ssh-agent-based authentication.
-
-          See [issue #31611](https://github.com/NixOS/nixpkgs/issues/31611)
-          :::
-        '';
-        default = [ "/etc/ssh/authorized_keys.d/%u" ];
-      };
-    };
-
-    security.pam.enableOTPW = mkEnableOption "the OTPW (one-time password) PAM module";
-
-    security.pam.dp9ik = {
-      enable = mkEnableOption ''
-        the dp9ik pam module provided by tlsclient.
-
-        If set, users can be authenticated against the 9front
-        authentication server given in {option}`security.pam.dp9ik.authserver`.
-      '';
-      control = mkOption {
-        default = "sufficient";
-        type = types.str;
-        description = ''
-          This option sets the pam "control" used for this module.
-        '';
-      };
-      authserver = mkOption {
-        default = null;
-        type = with types; nullOr str;
-        description = ''
-          This controls the hostname for the 9front authentication server
-          that users will be authenticated against.
-        '';
-      };
-    };
-
 
     users.motd = mkOption {
       default = null;
@@ -971,29 +693,5 @@ in
         runuser-l = { rootOK = true; unixAuth = false; };
       };
 
-    security.apparmor.includes."abstractions/pam" =
-      lib.concatMapStrings
-        (name: "r ${config.environment.etc."pam.d/${name}".source},\n")
-        (attrNames config.security.pam.services) +
-      ''
-        mr ${getLib pkgs.pam}/lib/security/pam_filter/*,
-        mr ${getLib pkgs.pam}/lib/security/pam_*.so,
-        r ${getLib pkgs.pam}/lib/security/,
-      '' +
-      (with lib; pipe config.security.pam.services [
-        attrValues
-        (catAttrs "rules")
-        (concatMap attrValues)
-        (concatMap attrValues)
-        (filter (rule: rule.enable))
-        (catAttrs "modulePath")
-        (filter (hasPrefix "/"))
-        unique
-        (map (module: "mr ${module},"))
-        concatLines
-      ]);
-
-    security.sudo.extraConfig = optionalSudoConfigForSSHAgentAuth;
-    security.sudo-rs.extraConfig = optionalSudoConfigForSSHAgentAuth;
   };
 }

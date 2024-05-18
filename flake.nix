@@ -60,9 +60,10 @@
         ./pam.nix
         (nixpkgs + "/nixos/modules/security/polkit.nix")
         ./sudo.nix
-        (nixpkgs + "/nixos/modules/security/sudo-rs.nix")
-        (nixpkgs + "/nixos/modules/security/apparmor.nix")
-        (nixpkgs + "/nixos/modules/security/wrappers/default.nix")
+        # (nixpkgs + "/nixos/modules/security/sudo-rs.nix")
+        # (nixpkgs + "/nixos/modules/security/apparmor.nix")
+        ./wrappers/default.nix
+        # (nixpkgs + "/nixos/modules/security/wrappers/default.nix")
 
         (nixpkgs + "/nixos/modules/services/logging/logrotate.nix")
 
@@ -92,8 +93,13 @@
       ];
     };
 
-    nixosModules.x86_64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.x86_64-linux; };
-    nixosModules.aarch64-linux = { nixpkgs.pkgs = nixpkgs.legacyPackages.aarch64-linux; };
+    nixosModules.x86_64-linux = {
+      nixpkgs.pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    };
+
+    nixosModules.aarch64-linux = {
+      nixpkgs.pkgs = nixpkgs.legacyPackages.aarch64-linux;
+    };
 
     nixosModules.config = {
       networking.hostName = "foo";
